@@ -1,42 +1,7 @@
 ### PowerShell Profile Refactor
-### Version 1.03 - Refactored
-
-$debug = $false
-
-# Define the path to the file that stores the last execution time
-$timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
 
 # Define the update interval in days, set to -1 to always check
 $updateInterval = 7
-
-if ($debug) {
-    Write-Host "#######################################" -ForegroundColor Red
-    Write-Host "#           Debug mode enabled        #" -ForegroundColor Red
-    Write-Host "#          ONLY FOR DEVELOPMENT       #" -ForegroundColor Red
-    Write-Host "#                                     #" -ForegroundColor Red
-    Write-Host "#       IF YOU ARE NOT DEVELOPING     #" -ForegroundColor Red
-    Write-Host "#       JUST RUN \`Update-Profile\`     #" -ForegroundColor Red
-    Write-Host "#        to discard all changes       #" -ForegroundColor Red
-    Write-Host "#   and update to the latest profile  #" -ForegroundColor Red
-    Write-Host "#               version               #" -ForegroundColor Red
-    Write-Host "#######################################" -ForegroundColor Red
-}
-
-
-#################################################################################################################################
-############                                                                                                         ############
-############                                          !!!   WARNING:   !!!                                           ############
-############                                                                                                         ############
-############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
-############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
-############                       https://github.com/ChrisTitusTech/powershell-profile.git.                         ############
-############                                                                                                         ############
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
-############                                                                                                         ############
-############                      IF YOU WANT TO MAKE CHANGES, USE THE Edit-Profile FUNCTION                         ############
-############                              AND SAVE YOUR CHANGES IN THE FILE CREATED.                                 ############
-############                                                                                                         ############
-#################################################################################################################################
 
 #opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
@@ -52,46 +17,6 @@ if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
     Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
 }
 Import-Module -Name Terminal-Icons
-$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path($ChocolateyProfile)) {
-    Import-Module "$ChocolateyProfile"
-}
-
-# Check for Profile Updates
-function Update-Profile {
-    try {
-        $url = "https://raw.githubusercontent.com/williamlimasilva/ultimate-powershell-profile/main/Microsoft.PowerShell_profile.ps1"
-        $oldhash = Get-FileHash $PROFILE
-        Invoke-RestMethod $url -OutFile "$env:temp/Microsoft.PowerShell_profile.ps1"
-        $newhash = Get-FileHash "$env:temp/Microsoft.PowerShell_profile.ps1"
-        if ($newhash.Hash -ne $oldhash.Hash) {
-            Copy-Item -Path "$env:temp/Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
-            Write-Host "Profile has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
-        } else {
-            Write-Host "Profile is up to date." -ForegroundColor Green
-        }
-    } catch {
-        Write-Error "Unable to check for `$profile updates: $_"
-    } finally {
-        Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
-    }
-}
-
-# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
-# if (-not $debug -and `
-#     ($updateInterval -eq -1 -or `
-#       -not (Test-Path $timeFilePath) -or `
-#       ((Get-Date) - [datetime]::ParseExact((Get-Content -Path $timeFilePath), 'yyyy-MM-dd', $null)).TotalDays -gt $updateInterval)) {
-
-#     Update-Profile
-#     $currentTime = Get-Date -Format 'yyyy-MM-dd'
-#     $currentTime | Out-File -FilePath $timeFilePath
-
-# } elseif (-not $debug) {
-#     Write-Warning "Profile update skipped. Last update check was within the last $updateInterval day(s)."
-# } else {
-#     Write-Warning "Skipping profile update check in debug mode"
-# }
 
 function Update-PowerShell {
     try {
@@ -116,22 +41,6 @@ function Update-PowerShell {
         Write-Error "Failed to update PowerShell. Error: $_"
     }
 }
-
-# Skip in debug mode
-# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
-# if (-not $debug -and `
-#     ($updateInterval -eq -1 -or `
-#      -not (Test-Path $timeFilePath) -or `
-#      ((Get-Date).Date - [datetime]::ParseExact((Get-Content -Path $timeFilePath), 'yyyy-MM-dd', $null).Date).TotalDays -gt $updateInterval)) {
-
-#     Update-PowerShell
-#     $currentTime = Get-Date -Format 'yyyy-MM-dd'
-#     $currentTime | Out-File -FilePath $timeFilePath
-# } elseif (-not $debug) {
-#     Write-Warning "PowerShell update skipped. Last update check was within the last $updateInterval day(s)."
-# } else {
-#     Write-Warning "Skipping PowerShell update in debug mode"
-# }
 
 function Clear-Cache {
     # add clear cache logic here
@@ -281,32 +190,6 @@ function unzip ($file) {
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
 }
-# function hb {
-#     if ($args.Length -eq 0) {
-#         Write-Error "No file path specified."
-#         return
-#     }
-    
-#     $FilePath = $args[0]
-    
-#     if (Test-Path $FilePath) {
-#         $Content = Get-Content $FilePath -Raw
-#     } else {
-#         Write-Error "File path does not exist."
-#         return
-#     }
-    
-#     $uri = "http://bin.christitus.com/documents"
-#     try {
-#         $response = Invoke-RestMethod -Uri $uri -Method Post -Body $Content -ErrorAction Stop
-#         $hasteKey = $response.key
-#         $url = "http://bin.christitus.com/$hasteKey"
-# 	Set-Clipboard $url
-#         Write-Output $url
-#     } catch {
-#         Write-Error "Failed to upload the document. Error: $_"
-#     }
-# }
 
 function df {
     Get-Volume
@@ -473,8 +356,8 @@ function sysinfo { Get-ComputerInfo }
 
 # Networking Utilities
 function flushdns {
-	Clear-DnsClientCache
-	Write-Host "DNS has been flushed"
+    Clear-DnsClientCache
+    Write-Host "DNS has been flushed"
 }
 
 # Clipboard Utilities
@@ -537,11 +420,6 @@ function rm {
         Write-Host "O arquivo '$path' não existe ou não é um arquivo válido." -ForegroundColor Yellow
     }
 }
-
-# Enhanced PowerShell Experience
-# Carrega o script do Copilot
-. "C:\Users\Home\Documents\PowerShell\gh-copilot.ps1"
-
 
 
 # Enhanced PSReadLine Configuration
@@ -621,32 +499,18 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
 # Get theme from profile.ps1 or use a default theme
 function Get-Theme {
-    if (Test-Path -Path $PROFILE.CurrentUserAllHosts -PathType leaf) {
-        $existingTheme = Select-String -Raw -Path $PROFILE.CurrentUserAllHosts -Pattern "oh-my-posh init pwsh --config"
+    if (Test-Path -Path $PROFILE.CurrentUserAllHosts -PathType Leaf) {
+        $existingTheme = Select-String -Raw -Path $PROFILE.CurrentUserAllHosts -Pattern "starship init powershell"
         if ($null -ne $existingTheme) {
             Invoke-Expression $existingTheme
             return
         }
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/star.omp.json | Invoke-Expression
+        Invoke-Expression (&starship init powershell)
     } else {
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/star.omp.json | Invoke-Expression
+        Invoke-Expression (&starship init powershell)
     }
 }
 
-## Final Line to set prompt
-Get-Theme
-if (Get-Command  -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
-} else {
-    Write-Host "zoxide command not found. Attempting to install via winget..."
-    try {
-        winget install -e --id ajeetdsouza.zoxide
-        Write-Host "zoxide installed successfully. Initializing..."
-        Invoke-Expression (& { (zoxide init powershell | Out-String) })
-    } catch {
-        Write-Error "Failed to install zoxide. Error: $_"
-    }
-}
 
 Set-Alias -Name z -Value __zoxide_z -Option AllScope -Scope Global -Force
 Set-Alias -Name zi -Value __zoxide_zi -Option AllScope -Scope Global -Force
@@ -657,87 +521,50 @@ function Show-Help {
 $($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 
-$($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
-
 $($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
-
+$($PSStyle.Foreground.Green)Clear-Cache$($PSStyle.Reset) - Clears system, user, and browser cache folders.
+$($PSStyle.Foreground.Green)prompt$($PSStyle.Reset) - Customizes the PowerShell prompt based on admin status.
+$($PSStyle.Foreground.Green)Test-CommandExists$($PSStyle.Reset) <command> - Checks if a command exists in the system.
 $($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
-
 $($PSStyle.Foreground.Green)touch$($PSStyle.Reset) <file> - Creates a new empty file.
-
 $($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds files recursively with the specified name.
-
-$($PSStyle.Foreground.Green)Get-PubIP$($PSStyle.Reset) - Retrieves the public IP address of the machine.
-
-$($PSStyle.Foreground.Green)winutil$($PSStyle.Reset) - Runs the latest WinUtil full-release script from Chris Titus Tech.
-
-$($PSStyle.Foreground.Green)winutildev$($PSStyle.Reset) - Runs the latest WinUtil pre-release script from Chris Titus Tech.
-
+$($PSStyle.Foreground.Green)Get-PublicIP$($PSStyle.Reset) - Retrieves the public IP address of the machine.
+$($PSStyle.Foreground.Green)admin$($PSStyle.Reset) [command] - Opens a new admin terminal or runs a command as admin.
 $($PSStyle.Foreground.Green)uptime$($PSStyle.Reset) - Displays the system uptime.
-
-$($PSStyle.Foreground.Green)reload-profile$($PSStyle.Reset) - Reloads the current user's PowerShell profile.
-
+$($PSStyle.Foreground.Green)Reload-Profile$($PSStyle.Reset) - Reloads the current user's PowerShell profile.
+$($PSStyle.Foreground.Green)zip$($PSStyle.Reset) <file> - Compresses a file to zip format.
 $($PSStyle.Foreground.Green)unzip$($PSStyle.Reset) <file> - Extracts a zip file to the current directory.
-
-$($PSStyle.Foreground.Green)hb$($PSStyle.Reset) <file> - Uploads the specified file's content to a hastebin-like service and returns the URL.
-
-$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches for a regex pattern in files within the specified directory or from the pipeline input.
-
 $($PSStyle.Foreground.Green)df$($PSStyle.Reset) - Displays information about volumes.
-
-$($PSStyle.Foreground.Green)sed$($PSStyle.Reset) <file> <find> <replace> - Replaces text in a file.
-
 $($PSStyle.Foreground.Green)which$($PSStyle.Reset) <name> - Shows the path of the command.
-
 $($PSStyle.Foreground.Green)export$($PSStyle.Reset) <name> <value> - Sets an environment variable.
-
-$($PSStyle.Foreground.Green)pkill$($PSStyle.Reset) <name> - Kills processes by name.
-
 $($PSStyle.Foreground.Green)pgrep$($PSStyle.Reset) <name> - Lists processes by name.
-
-$($PSStyle.Foreground.Green)head$($PSStyle.Reset) <path> [n] - Displays the first n lines of a file (default 10).
-
-$($PSStyle.Foreground.Green)tail$($PSStyle.Reset) <path> [n] - Displays the last n lines of a file (default 10).
-
+$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches for a regex pattern in files within the specified directory or from the pipeline input.
+$($PSStyle.Foreground.Green)sed$($PSStyle.Reset) <file> <find> <replace> - Replaces text in a file.
+$($PSStyle.Foreground.Green)cat$($PSStyle.Reset) <file> - Displays the contents of a file.
+$($PSStyle.Foreground.Green)tac$($PSStyle.Reset) <file> - Displays the last 10 lines of a file.
+$($PSStyle.Foreground.Green)less$($PSStyle.Reset) <file> - Displays the contents of a file using Out-Host.
+$($PSStyle.Foreground.Green)head$($PSStyle.Reset) <file> [n] - Displays the first n lines of a file (default 10).
+$($PSStyle.Foreground.Green)tail$($PSStyle.Reset) <file> [n] - Displays the last n lines of a file (default 10).
 $($PSStyle.Foreground.Green)nf$($PSStyle.Reset) <name> - Creates a new file with the specified name.
-
+$($PSStyle.Foreground.Green)mkdir$($PSStyle.Reset) <dir> - Creates a new directory.
 $($PSStyle.Foreground.Green)mkcd$($PSStyle.Reset) <dir> - Creates and changes to a new directory.
-
+$($PSStyle.Foreground.Green)trash$($PSStyle.Reset) <path> - Moves a file or directory to the Recycle Bin.
 $($PSStyle.Foreground.Green)docs$($PSStyle.Reset) - Changes the current directory to the user's Documents folder.
-
 $($PSStyle.Foreground.Green)dtop$($PSStyle.Reset) - Changes the current directory to the user's Desktop folder.
-
-$($PSStyle.Foreground.Green)ep$($PSStyle.Reset) - Opens the profile for editing.
-
-$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills a process by name.
-
+$($PSStyle.Foreground.Green)pkill$($PSStyle.Reset) <name> - Kills processes by name.
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills a process by name (force).
+$($PSStyle.Foreground.Green)ls$($PSStyle.Reset) [path] [filter] - Lists files and directories.
 $($PSStyle.Foreground.Green)la$($PSStyle.Reset) - Lists all files in the current directory with detailed formatting.
-
 $($PSStyle.Foreground.Green)ll$($PSStyle.Reset) - Lists all files, including hidden, in the current directory with detailed formatting.
-
-$($PSStyle.Foreground.Green)gs$($PSStyle.Reset) - Shortcut for 'git status'.
-
-$($PSStyle.Foreground.Green)ga$($PSStyle.Reset) - Shortcut for 'git add .'.
-
-$($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - Shortcut for 'git commit -m'.
-
-$($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - Shortcut for 'git push'.
-
-$($PSStyle.Foreground.Green)g$($PSStyle.Reset) - Changes to the GitHub directory.
-
-$($PSStyle.Foreground.Green)gcom$($PSStyle.Reset) <message> - Adds all changes and commits with the specified message.
-
-$($PSStyle.Foreground.Green)lazyg$($PSStyle.Reset) <message> - Adds all changes, commits with the specified message, and pushes to the remote repository.
-
 $($PSStyle.Foreground.Green)sysinfo$($PSStyle.Reset) - Displays detailed system information.
-
 $($PSStyle.Foreground.Green)flushdns$($PSStyle.Reset) - Clears the DNS cache.
-
 $($PSStyle.Foreground.Green)cpy$($PSStyle.Reset) <text> - Copies the specified text to the clipboard.
-
+$($PSStyle.Foreground.Green)cp$($PSStyle.Reset) <source> <destination> - Copies files or directories recursively.
 $($PSStyle.Foreground.Green)pst$($PSStyle.Reset) - Retrieves text from the clipboard.
-
-Use '$($PSStyle.Foreground.Magenta)Show-Help$($PSStyle.Reset)' to display this help message.
+$($PSStyle.Foreground.Green)mv$($PSStyle.Reset) <source> <destination> - Moves files or directories.
+$($PSStyle.Foreground.Green)find$($PSStyle.Reset) [path] [filter] - Finds files and directories recursively.
+$($PSStyle.Foreground.Green)rm$($PSStyle.Reset) <path> - Removes files or directories.
+$($PSStyle.Foreground.Magenta)Show-Help$($PSStyle.Reset) - Displays this help message.
 "@
     Write-Host $helpText
 }
@@ -746,4 +573,5 @@ if (Test-Path "$PSScriptRoot\CTTcustom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\CTTcustom.ps1`""
 }
 
-# Write-Host "$($PSStyle.Foreground.Yellow)Use 'Show-Help' to display help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'Show-Help' to display help$($PSStyle.Reset)"
+Invoke-Expression (&starship init powershell)
