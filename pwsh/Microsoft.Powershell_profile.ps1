@@ -499,15 +499,27 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
 # Get theme from profile.ps1 or use a default theme
 function Get-Theme {
-    if (Test-Path -Path $PROFILE.CurrentUserAllHosts -PathType Leaf) {
-        $existingTheme = Select-String -Raw -Path $PROFILE.CurrentUserAllHosts -Pattern "starship init powershell"
-        if ($null -ne $existingTheme) {
-            Invoke-Expression $existingTheme
-            return
+    param(
+        [ValidateSet('starship','omp')]
+        [string]$Theme
+    )
+    $configFile = "$env:USERPROFILE\.pwsh_theme"
+    if ($null -eq $Theme) {
+        if (Test-Path $configFile) {
+            $Theme = Get-Content $configFile -Raw
+        } else {
+            $Theme = 'starship'
         }
-        Invoke-Expression (&starship init powershell)
     } else {
-        Invoke-Expression (&starship init powershell)
+        Set-Content -Path $configFile -Value $Theme
+    }
+    switch ($Theme) {
+        'starship' {
+            Invoke-Expression (&starship init powershell)
+        }
+        'omp' {
+            oh-my-posh init pwsh --config https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/star.omp.json | Invoke-Expression
+        }
     }
 }
 
@@ -573,5 +585,6 @@ if (Test-Path "$PSScriptRoot\CTTcustom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\CTTcustom.ps1`""
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'Show-Help' to display help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use -> Show-Help <- TO DISPLAY ALL COMMANDS$($PSStyle.Reset)"
 Invoke-Expression (&starship init powershell)
+oh-my-posh init pwsh --config https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/star.omp.json | Invoke-Expression
